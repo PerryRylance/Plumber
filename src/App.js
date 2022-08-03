@@ -3,29 +3,18 @@ import './App.css';
 
 import WFC from "./lib/ndwfc/ndwfc";
 import { WFCTool2D } from "./lib/ndwfc/ndwfc-tools";
+import Level from './level/Level';
 
 function App() {
 
-	console.log(WFC, WFCTool2D);
+	const level = new Level();
+	level.generate();
 
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+	return (
+		<div className="App">
+			{level.table}
+		</div>
+	);
 }
 
 export default App;

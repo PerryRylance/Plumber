@@ -1,8 +1,10 @@
-var WFC = function({nd,weights,rules,wave}){
+var WFC = function({nd,weights,rules,wave,random}){
   wave = wave || {};
   var wavefront = {}
   var n_patterns = weights.length
   var wavefront = {}
+
+  random = random ?? Math.random;
   
   function coord(k){
     return k.split(",").map(x=>parseInt(x))
@@ -28,7 +30,7 @@ var WFC = function({nd,weights,rules,wave}){
     for (var i = 0; i < x.length; i++){
       one += x[i]*weights[i]
     }
-    var r = Math.random()*one
+    var r = random()*one
     for (var i = 0; i < x.length; i++){
       r -= x[i]*weights[i]
       if (r < 0){
@@ -200,13 +202,13 @@ var WFC = function({nd,weights,rules,wave}){
         for (var k in wave){
           propagate(coord(k))
         }
-        console.log(":(")
+        throw new Error("Unexpected state");
         return false
       }
       if (ent == 0){
         continue;
       }
-      ent += (Math.random()-0.5)
+      ent += (random()-0.5)
       if (ent < min_ent){
         min_ent = ent
         min_arg = coord(k)

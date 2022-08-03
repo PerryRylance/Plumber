@@ -105,6 +105,10 @@ var WFCTool2D = function(){
     }
     n_prototypes++;
   }
+
+  this.getTiles = function() {
+	return tiles;
+  }
   
   this.addColor = function(symbol, color){
     colors[symbol] = color
