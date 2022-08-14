@@ -36,3 +36,28 @@
     transform: rotate(360deg);
   }
 }
+
+td.walkable
+{
+	background-color: white;
+}
+
+td.impassible
+{
+	background-color: grey;
+}
+
+td.island-odd
+{
+	background-color: lightyellow;
+}
+
+td.island-even
+{
+	background-color: yellow;
+}
+
+td.start
+{
+	background-color: lightgreen;
+}

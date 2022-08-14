@@ -20,7 +20,8 @@ export class WfcInputGenerator
 
 		return {
 			input: tool.generateWFCInput(),
-			tiles: tool.getTiles()
+			tiles: tool.getTiles(),
+			tool
 		};
 	}
 }

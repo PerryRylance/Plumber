@@ -1,14 +1,15 @@
-import logo from './logo.svg';
 import './App.css';
 
-import WFC from "./lib/ndwfc/ndwfc";
-import { WFCTool2D } from "./lib/ndwfc/ndwfc-tools";
 import Level from './level/Level';
+import { useMemo } from 'react';
 
 function App() {
 
-	const level = new Level();
-	level.generate();
+	const level = useMemo(() => {
+		const level = new Level();
+		level.generate();
+		return level;
+	})
 
 	return (
 		<div className="App">

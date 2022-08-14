@@ -1,18 +1,20 @@
 import PRNG from "pseudo-random";
 import PF from "pathfinding";
-import IslandFinder from "./IslandFinder";
+import IslandFinder from "../pathfinding/IslandFinder";
 
 import WFC from "../lib/ndwfc/ndwfc";
 import TILESET from "./Tileset";
 import { WfcInputGenerator } from "./WfcInputGenerator";
 import Cell from "./Cell";
 import Island from "./Island";
+import { WFCTool2D } from "../lib/ndwfc/ndwfc-tools";
 
-const size = 3;
+const size = 5;
 
 export default class Level {
+
 	generate() {
-		this.prng = new PRNG(80087355);
+		this.prng = new PRNG( 1234 );
 
 		// NB: Generate tiles with WFC
 		this.generateReadout();
@@ -21,10 +23,14 @@ export default class Level {
 		this.generateCells();
 
 		// NB: Discover the largest island
-		this.generateIslands();
+		this.findIslands();
 
 		// NB: Pick start point at top or side
+		this.findStart();
+
 		// NB: Find natural endpoint
+		// this.findNaturalEndpoints();
+
 		// NB: Add valves
 		// NB: Rotate corners
 		// NB: Etc. with more obstacles
@@ -47,6 +53,21 @@ export default class Level {
 
 		this.readout = wfc.readout();
 		this.tiles = result.tiles;
+		this.tool = result.tool;
+
+		/*var canvas = document.createElement("canvas");
+		var viewport = {x:0,y:0,w:10,h:10}; // the region you want to visualize
+		tool.plotWFCOoutput(canvas, viewport, wfc.readout()); // plot it!*/
+	}
+
+	debugPlot(canvas)
+	{
+		const viewport = { x: 0, y: 0, w: size, h: size }; // the region you want to visualize
+
+		this.tool.addColor("@", [255,0,0]);
+		this.tool.addColor(".", [0,255,255]);
+
+		this.tool.plotWFCOutput(canvas, viewport, this.readout); // plot it!*/
 	}
 
 	generateCells() {
@@ -54,18 +75,15 @@ export default class Level {
 		const wave = this.readout;
 		const tiles = this.tiles;
 
-		const w = tiles[0][0].length;
-		const h = tiles[0].length;
-
 		this.cells = [];
 		this.pathfinding = {
-			grid: new PF.Grid(w * 3, h * 3)
+			grid: new PF.Grid(size * 3, size * 3)
 		};
 
-		for (let x = 0; x < w * 3; x++) {
+		for (let x = 0; x < size * 3; x++) {
 			const column = [];
 
-			for (let y = 0; y < h * 3; y++)
+			for (let y = 0; y < size * 3; y++)
 				column.push( new Cell() );
 
 			this.cells.push(column);
@@ -85,8 +103,8 @@ export default class Level {
 
 					const state = tiles[v][i][j];
 
-					const cx = x * 3 + i;
-					const cy = y * 3 + j;
+					const cx = x * 3 + j;
+					const cy = y * 3 + i;
 
 					this.cells[cx][cy].walkable = state == "@";
 					this.pathfinding.grid.setWalkableAt(cx, cy, this.cells[cx][cy].walkable);
@@ -96,11 +114,13 @@ export default class Level {
 		}
 	}
 
-	generateIslands()
+	findIslands()
 	{
 		const w = this.cells.length;
 		const h = this.cells[0].length;
-		const finder = new IslandFinder();
+		const finder = new IslandFinder({
+			grid: this.pathfinding.grid
+		});
 		
 		this.islands = [];
 
@@ -113,7 +133,7 @@ export default class Level {
 				if(!cell.walkable || cell.island)
 					continue; // NB: Non-walkable cells can't belong to an island
 				
-				const cells = finder.findIsland(x, y, this.pathfinding.grid).map(node => {
+				const cells = finder.findIsland(x, y).map(node => {
 					return this.cells[node.x][node.y];
 				});
 
@@ -123,16 +143,40 @@ export default class Level {
 		}
 	}
 
+	findStart()
+	{
+		// NB: Plain and simple just pick the highest point on the outside
+		// TODO: Maybe pick all points, lose half the array and then randomly pick one of the remaining points?
+		for(let y = 0; y < size; y++)
+		{
+			for(
+				let x = 0; 
+				x < size; 
+				x += (y === 0 || y === size - 1 ? 1 : size - 1)
+				)
+			{
+				if(this.cells[x][y].walkable)
+				{
+					this.start = {x, y};
+					return;
+				}
+			}
+		}
+
+		throw new Error("Failed to find start point");
+	}
+
+	findNaturalEndpoints()
+	{
+
+	}
+
 	get table() {
-
-		const w = this.cells.length;
-		const h = this.cells[0].length;
-
 		const rows = [];
 
-		for(let x = 0; x < w; x++)
+		for(let x = 0; x < size * 3; x++)
 		{
-			for(let y = 0; y < h; y++)
+			for(let y = 0; y < size * 3; y++)
 			{
 				if(!rows[y])
 					rows[y] = [];
@@ -140,7 +184,24 @@ export default class Level {
 				const cell = this.cells[x][y];
 				const islandIndex = this.islands.indexOf(cell.island);
 
-				rows[y].push ( cell.walkable ? <td key={x}>{islandIndex}</td> : <td key={x} style={{background: "grey"}}></td> )
+				const classes = [];
+				const children = [];
+
+				if(cell.walkable)
+				{
+					const isIslandEven = islandIndex % 2;
+
+					classes.push(isIslandEven ? "island-even" : "island-odd");
+					
+					classes.push("walkable");
+				}
+				else
+					classes.push("impassible");
+				
+				if(x == this.start.x && y == this.start.y)
+					classes.push("start");
+
+				rows[y].push ( <td key={x} className={classes.join(" ")}>{children}</td> );
 			}
 		}
 

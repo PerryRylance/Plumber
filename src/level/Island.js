@@ -14,4 +14,9 @@ export default class Island
 			cell.island = this;
 		}
 	}
+
+	get size()
+	{
+		return this.cells.length;
+	}
 }

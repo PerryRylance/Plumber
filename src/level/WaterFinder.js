@@ -17,7 +17,7 @@ import DiagonalMovement from "../../node_modules/pathfinding/src/core/DiagonalMo
  * @param {number} opt.weight Weight to apply to the heuristic to allow for
  *     suboptimal paths, in order to speed up the search.
  */
-function IslandFinder(opt) {
+function WaterFinder(opt) {
 	opt = opt || {};
 	this.allowDiagonal = opt.allowDiagonal;
 	this.dontCrossCorners = opt.dontCrossCorners;
@@ -78,6 +78,11 @@ IslandFinder.prototype.findIsland = function (startX, startY, grid) {
 		node = openList.pop();
 		node.closed = true;
 
+		// if reached the end position, construct the path and return it
+        if (node === endNode) {
+            return Util.backtrace(endNode);
+        }
+
 		closedList.push(node);
 
 		// get neigbours of the current node
@@ -121,4 +126,4 @@ IslandFinder.prototype.findIsland = function (startX, startY, grid) {
 	return closedList;
 };
 
-export default IslandFinder;
+export default WaterFinder;
