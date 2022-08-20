@@ -1,10 +1,36 @@
 import Heuristic from "pathfinding/src/core/Heuristic";
 import Heap from "heap";
 import { Grid, Util } from "pathfinding";
-import DiagonalMovement from "pathfinding/src/core/DiagonalMovement";
+import { backtrace } from "pathfinding/src/core/Util";
+
+import Point from "../generic/Point";
+
+enum DiagonalMovement {
+	Always = 1,
+	Never = 2,
+	IfAtMostOneObstacle = 3,
+	OnlyWhenNoObstacles = 4
+}
+
+export interface AStarInterface {
+	diagonalMovement?: DiagonalMovement,
+	grid: InstanceType<typeof Grid>
+};
+
+export interface Node extends Point {
+	walkable: boolean;
+	g: number;
+	f: number;
+	opened: boolean;
+}
 
 export default class AStar {
-	constructor({diagonalMovement, grid})
+	grid: InstanceType<typeof Grid>;
+	diagonalMovement: DiagonalMovement;
+	start?: Point;
+	end?: Point;
+
+	constructor({diagonalMovement, grid}: AStarInterface)
 	{
 		if(!(grid instanceof Grid))
 			throw new Error("Expected instance of Grid");
@@ -13,23 +39,29 @@ export default class AStar {
 		this.diagonalMovement = diagonalMovement ?? DiagonalMovement.Never;
 	}
 
-	setStart(x, y)
+	setStart(point: Point)
 	{
-		this.start = {x, y};
+		this.start = {
+			x: point.x,
+			y: point.y
+		};
 	}
 
-	setEnd(x, y)
+	setEnd(point: Point)
 	{
-		this.end = {x, y};
+		this.end = {
+			x: point.x,
+			y: point.y
+		};
 	}
 
 	findPath() {
 		const grid = this.grid.clone();
-		const openList = new Heap(function (nodeA, nodeB) {
+		const openList = new Heap(function (nodeA: Node, nodeB: Node) {
 			return nodeA.f - nodeB.f;
 		});
-		const closedList = [];
-		const startNode = grid.getNodeAt(this.start.x, this.start.y);
+		const closedList: Array<Node> = [];
+		const startNode = grid.getNodeAt(this.start!.x, this.start!.y) as Node;
 		let node, neighbours, neighbour;
 
 		startNode.g = startNode.f = 0;
@@ -45,7 +77,7 @@ export default class AStar {
 			closedList.push(node);
 
 			if(this.isGoal(node))
-				return Util.backtrace(node);
+				return backtrace(node);
 			
 			neighbours = grid.getNeighbors(node, this.diagonalMovement);
 
@@ -79,13 +111,13 @@ export default class AStar {
 		return this.getNoGoalResult(closedList); // NB: No path found
 	}
 
-	isGoal(x, y) {
-		return x === this.end.x && y === this.end.y;
+	isGoal({x, y}: Node): boolean {
+		return x === this.end!.x && y === this.end!.y;
 	}
 
-	getHeuristic(node) {
-		const dx = Math.abs( this.end.x - node.x );
-		const dy = Math.abs( this.end.y - node.y );
+	getHeuristic(node: Node): number {
+		const dx = Math.abs( this.end!.x - node.x );
+		const dy = Math.abs( this.end!.y - node.y );
 
 		if(this.diagonalMovement)
 			return Heuristic.octile(dx, dy);
@@ -93,11 +125,11 @@ export default class AStar {
 		return Heuristic.manhattan(dx, dy);
 	}
 
-	getCost(node, neighbour) {
+	getCost(node: Node, neighbour: Node): number {
 		return node.g + (neighbour.x - node.x === 0 || neighbour.y - node.y === 0 ? 1 : Math.SQRT2);
 	}
 
-	getNoGoalResult(closedList)
+	getNoGoalResult(closedList: Array<Node>)
 	{
 		return null;
 	}

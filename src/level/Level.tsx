@@ -8,10 +8,26 @@ import { WfcInputGenerator } from "./WfcInputGenerator";
 import Cell from "./Cell";
 import Island from "./Island";
 import { WFCTool2D } from "../lib/ndwfc/ndwfc-tools";
+import WaterFinder from "../pathfinding/WaterFinder";
+import Grid from "pathfinding/src/core/Grid";
+import { Node } from "../pathfinding/AStar";
+import Point from "../generic/Point";
+import React from "react";
 
 const size = 5;
 
 export default class Level {
+
+	prng: InstanceType<typeof PRNG>;
+	readout?: Array<Object>;
+	tool?: InstanceType<typeof WFCTool2D>;
+	tiles?: Array<Array<Array<string>>>;
+	cells?: Array<Array<Cell>>;
+	pathfinding?: {
+		grid: InstanceType<typeof Grid>
+	};
+	islands?: Array<Island>;
+	start?: Point;
 
 	generate() {
 		this.prng = new PRNG( 1234 );
@@ -29,7 +45,7 @@ export default class Level {
 		this.findStart();
 
 		// NB: Find natural endpoint
-		// this.findNaturalEndpoints();
+		this.findNaturalEndpoints();
 
 		// NB: Add valves
 		// NB: Rotate corners
@@ -43,7 +59,8 @@ export default class Level {
 
 		const wfc = new WFC({
 			...result.input,
-			random: this.prng.random
+			random: this.prng.random,
+			wave: null
 		});
 
 		wfc.expand([0, 0], [size, size]);
@@ -60,20 +77,20 @@ export default class Level {
 		tool.plotWFCOoutput(canvas, viewport, wfc.readout()); // plot it!*/
 	}
 
-	debugPlot(canvas)
+	debugPlot(canvas: HTMLCanvasElement)
 	{
 		const viewport = { x: 0, y: 0, w: size, h: size }; // the region you want to visualize
 
-		this.tool.addColor("@", [255,0,0]);
-		this.tool.addColor(".", [0,255,255]);
+		this.tool!.addColor("@", [255,0,0]);
+		this.tool!.addColor(".", [0,255,255]);
 
-		this.tool.plotWFCOutput(canvas, viewport, this.readout); // plot it!*/
+		this.tool!.plotWFCOutput(canvas, viewport, this.readout); // plot it!*/
 	}
 
 	generateCells() {
-		const waveCached = {};
+		const waveCached: any = {}; // TODO: Is this appropriate for a map?
 		const wave = this.readout;
-		const tiles = this.tiles;
+		const tiles = this.tiles!;
 
 		this.cells = [];
 		this.pathfinding = {
@@ -81,7 +98,7 @@ export default class Level {
 		};
 
 		for (let x = 0; x < size * 3; x++) {
-			const column = [];
+			const column: Array<Cell> = [];
 
 			for (let y = 0; y < size * 3; y++)
 				column.push( new Cell() );
@@ -93,10 +110,10 @@ export default class Level {
 			if (k in waveCached) {
 				continue
 			}
-			waveCached[k] = wave[k]
+			waveCached[k] = wave[k as any]; // TODO: Any as key? Surely there's a more elegant solution
 			const [y, x] = k.split(",").map(x => parseInt(x));
 
-			let v = wave[k];
+			let v: number = wave[k as any] as number;
 
 			for (let i = 0; i < 3; i++) {
 				for (let j = 0; j < 3; j++) {
@@ -116,10 +133,10 @@ export default class Level {
 
 	findIslands()
 	{
-		const w = this.cells.length;
-		const h = this.cells[0].length;
+		const w = this.cells!.length;
+		const h = this.cells![0].length;
 		const finder = new IslandFinder({
-			grid: this.pathfinding.grid
+			grid: this.pathfinding!.grid
 		});
 		
 		this.islands = [];
@@ -128,13 +145,13 @@ export default class Level {
 		{
 			for(let y = 0; y < h; y++)
 			{
-				const cell = this.cells[x][y];
+				const cell = this.cells![x][y];
 
 				if(!cell.walkable || cell.island)
 					continue; // NB: Non-walkable cells can't belong to an island
 				
-				const cells = finder.findIsland(x, y).map(node => {
-					return this.cells[node.x][node.y];
+				const cells = finder.findIsland(x, y).map((node: Node) => {
+					return this.cells![node.x][node.y];
 				});
 
 				const island = new Island(cells);
@@ -155,7 +172,7 @@ export default class Level {
 				x += (y === 0 || y === size - 1 ? 1 : size - 1)
 				)
 			{
-				if(this.cells[x][y].walkable)
+				if(this.cells![x][y].walkable)
 				{
 					this.start = {x, y};
 					return;
@@ -168,11 +185,13 @@ export default class Level {
 
 	findNaturalEndpoints()
 	{
+		const finder = new WaterFinder({ grid: this.pathfinding!.grid });
 
+		console.log( finder.findPath() );
 	}
 
 	get table() {
-		const rows = [];
+		const rows: Array< Array<JSX.Element> > = [];
 
 		for(let x = 0; x < size * 3; x++)
 		{
@@ -181,11 +200,11 @@ export default class Level {
 				if(!rows[y])
 					rows[y] = [];
 				
-				const cell = this.cells[x][y];
-				const islandIndex = this.islands.indexOf(cell.island);
+				const cell = this.cells![x][y];
+				const islandIndex = this.islands!.indexOf(cell.island!);
 
 				const classes = [];
-				const children = [];
+				const children: Array<any> = [];
 
 				if(cell.walkable)
 				{
@@ -198,7 +217,7 @@ export default class Level {
 				else
 					classes.push("impassible");
 				
-				if(x == this.start.x && y == this.start.y)
+				if(x == this.start!.x && y == this.start!.y)
 					classes.push("start");
 
 				rows[y].push ( <td key={x} className={classes.join(" ")}>{children}</td> );
