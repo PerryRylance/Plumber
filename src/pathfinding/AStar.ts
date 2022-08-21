@@ -1,6 +1,6 @@
 import Heuristic from "pathfinding/src/core/Heuristic";
 import Heap from "heap";
-import { Grid, Util } from "pathfinding";
+import { Grid } from "pathfinding";
 import { backtrace } from "pathfinding/src/core/Util";
 
 import Point from "../generic/Point";
@@ -39,29 +39,17 @@ export default class AStar {
 		this.diagonalMovement = diagonalMovement ?? DiagonalMovement.Never;
 	}
 
-	setStart(point: Point)
-	{
-		this.start = {
-			x: point.x,
-			y: point.y
-		};
-	}
+	findPath(start: Point, end?: Point) {
 
-	setEnd(point: Point)
-	{
-		this.end = {
-			x: point.x,
-			y: point.y
-		};
-	}
+		this.start = start;
+		this.end = end;
 
-	findPath() {
 		const grid = this.grid.clone();
 		const openList = new Heap(function (nodeA: Node, nodeB: Node) {
 			return nodeA.f - nodeB.f;
 		});
 		const closedList: Array<Node> = [];
-		const startNode = grid.getNodeAt(this.start!.x, this.start!.y) as Node;
+		const startNode = grid.getNodeAt(start!.x, start!.y) as Node;
 		let node, neighbours, neighbour;
 
 		startNode.g = startNode.f = 0;

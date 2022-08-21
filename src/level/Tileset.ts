@@ -1,4 +1,14 @@
-const TILESET = [
+export interface TileOptions {
+	transformations?: Array<string>,
+	weight?: Number
+}
+
+export interface Tile {
+	cells: String,
+	options?: TileOptions
+}
+
+const TILESET: Array<Tile> = [
 	{
 		cells:
 			`

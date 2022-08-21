@@ -123,7 +123,7 @@ export default class Level {
 					const cx = x * 3 + j;
 					const cy = y * 3 + i;
 
-					this.cells[cx][cy].walkable = state == "@";
+					this.cells[cx][cy].walkable = state === "@";
 					this.pathfinding.grid.setWalkableAt(cx, cy, this.cells[cx][cy].walkable);
 
 				}
@@ -150,7 +150,7 @@ export default class Level {
 				if(!cell.walkable || cell.island)
 					continue; // NB: Non-walkable cells can't belong to an island
 				
-				const cells = finder.findIsland(x, y).map((node: Node) => {
+				const cells = finder.findIsland({x, y}).map((node: Node) => {
 					return this.cells![node.x][node.y];
 				});
 
@@ -187,7 +187,7 @@ export default class Level {
 	{
 		const finder = new WaterFinder({ grid: this.pathfinding!.grid });
 
-		console.log( finder.findPath() );
+		console.log( finder.findPath(this.start!) );
 	}
 
 	get table() {
@@ -217,7 +217,7 @@ export default class Level {
 				else
 					classes.push("impassible");
 				
-				if(x == this.start!.x && y == this.start!.y)
+				if(x === this.start!.x && y === this.start!.y)
 					classes.push("start");
 
 				rows[y].push ( <td key={x} className={classes.join(" ")}>{children}</td> );

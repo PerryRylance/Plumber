@@ -1,15 +1,18 @@
 import { WFCTool2D } from "../lib/ndwfc/ndwfc-tools";
 
+import { Tile } from "./Tileset";
+
 export class WfcInputGenerator
 {
-	static fromTileset(tileset)
+	static fromTileset(tileset: Array<Tile>)
 	{
 		const tool = new WFCTool2D();
 
 		for(const definition of tileset)
 		{
-			const args = [
-				definition.cells.replace(/^\s*\n?/gm, "").trim("\n")
+			// TODO: Is any valid here?
+			const args: any = [
+				definition.cells.replace(/^\s*\n?/gm, "").trim()
 			];
 
 			if("options" in definition)
