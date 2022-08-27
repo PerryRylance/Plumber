@@ -96,7 +96,7 @@ export default class AStar {
 			}
 		}
 
-		return this.getNoGoalResult(closedList); // NB: No path found
+		return this.getNoGoalResult(closedList, grid); // NB: No path found
 	}
 
 	isGoal({x, y}: Node): boolean {
@@ -117,7 +117,7 @@ export default class AStar {
 		return node.g + (neighbour.x - node.x === 0 || neighbour.y - node.y === 0 ? 1 : Math.SQRT2);
 	}
 
-	getNoGoalResult(closedList: Array<Node>)
+	getNoGoalResult(closedList: Array<Node>, grid: InstanceType<typeof Grid>)
 	{
 		return null;
 	}

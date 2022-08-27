@@ -13,7 +13,7 @@ function App() {
 
 	return (
 		<div className="App">
-			{level.table}
+			{level.tables}
 		</div>
 	);
 }

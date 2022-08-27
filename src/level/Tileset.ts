@@ -1,6 +1,6 @@
 export interface TileOptions {
 	transformations?: Array<string>,
-	weight?: Number
+	weight?: number
 }
 
 export interface Tile {

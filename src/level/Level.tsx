@@ -12,9 +12,10 @@ import WaterFinder from "../pathfinding/WaterFinder";
 import Grid from "pathfinding/src/core/Grid";
 import { Node } from "../pathfinding/AStar";
 import Point from "../generic/Point";
+import { PointWithCost } from "../generic/Point";
 import React from "react";
 
-const size = 5;
+const size = 7;
 
 export default class Level {
 
@@ -28,6 +29,7 @@ export default class Level {
 	};
 	islands?: Array<Island>;
 	start?: Point;
+	routes?: Array<Array<PointWithCost>>;
 
 	generate() {
 		this.prng = new PRNG( 1234 );
@@ -44,8 +46,8 @@ export default class Level {
 		// NB: Pick start point at top or side
 		this.findStart();
 
-		// NB: Find natural endpoint
-		this.findNaturalEndpoints();
+		// NB: Find water routes
+		this.findWaterRoutes();
 
 		// NB: Add valves
 		// NB: Rotate corners
@@ -158,6 +160,8 @@ export default class Level {
 				this.islands.push(island);
 			}
 		}
+
+		this.islands = this.islands.sort((a: Island, b: Island) => a.size > b.size ? -1 : 1);
 	}
 
 	findStart()
@@ -183,59 +187,73 @@ export default class Level {
 		throw new Error("Failed to find start point");
 	}
 
-	findNaturalEndpoints()
+	findWaterRoutes()
 	{
 		const finder = new WaterFinder({ grid: this.pathfinding!.grid });
+		const routes = finder.findPath(this.start!);
 
-		console.log( finder.findPath(this.start!) );
+		this.routes = routes;
+
+		console.log(routes);
 	}
 
-	get table() {
-		const rows: Array< Array<JSX.Element> > = [];
+	get tables() {
+		const result: Array<JSX.Element> = [];
 
-		for(let x = 0; x < size * 3; x++)
+		for(const route of this.routes!)
 		{
-			for(let y = 0; y < size * 3; y++)
+			const rows: Array< Array<JSX.Element> > = [];
+
+			for(let x = 0; x < size * 3; x++)
 			{
-				if(!rows[y])
-					rows[y] = [];
-				
-				const cell = this.cells![x][y];
-				const islandIndex = this.islands!.indexOf(cell.island!);
-
-				const classes = [];
-				const children: Array<any> = [];
-
-				if(cell.walkable)
+				for(let y = 0; y < size * 3; y++)
 				{
-					const isIslandEven = islandIndex % 2;
-
-					classes.push(isIslandEven ? "island-even" : "island-odd");
+					if(!rows[y])
+						rows[y] = [];
 					
-					classes.push("walkable");
-				}
-				else
-					classes.push("impassible");
-				
-				if(x === this.start!.x && y === this.start!.y)
-					classes.push("start");
+					const cell = this.cells![x][y];
+					const islandIndex = this.islands!.indexOf(cell.island!);
 
-				rows[y].push ( <td key={x} className={classes.join(" ")}>{children}</td> );
+					const classes = [];
+					const children: Array<any> = [];
+
+					if(cell.walkable)
+					{
+						const isIslandEven = islandIndex % 2;
+
+						classes.push(isIslandEven ? "island-even" : "island-odd");
+						classes.push("walkable");
+					}
+					else
+						classes.push("impassible");
+					
+					if(x === this.start!.x && y === this.start!.y)
+						classes.push("start");
+
+					// NB: Pretty crap in terms of performance but works
+					let node: PointWithCost | undefined;
+					if( node = route.find((point: PointWithCost) => point.x === x && point.y === y) )
+					{
+						classes.push("water");
+					}
+
+					rows[y].push ( <td key={x} className={classes.join(" ")}>{children}</td> );
+				}
 			}
+
+			result.push(<table className="debug">
+				<tbody>
+					{
+						rows.map((cells, index) => {
+							return <tr key={index}>
+								{cells}
+							</tr>;
+						})
+					}
+				</tbody>
+			</table>);
 		}
 
-		return <table className="debug">
-			<tbody>
-				{
-					rows.map((cells, index) => {
-						return <tr key={index}>
-							{cells}
-						</tr>;
-					})
-				}
-			</tbody>
-		</table>
-
-		// return rows.join("\r\n");
+		return <>{result}</>;
 	}
 }

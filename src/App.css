@@ -37,6 +37,11 @@
   }
 }
 
+table.debug
+{
+	margin-bottom: 2rem;
+}
+
 td.walkable
 {
 	background-color: white;
@@ -60,4 +65,9 @@ td.island-even
 td.start
 {
 	background-color: lightgreen;
+}
+
+td.water
+{
+	background-color: blue !important;
 }
