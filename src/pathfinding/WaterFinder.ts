@@ -48,7 +48,7 @@ export default class WaterFinder extends AStar
 			return false;
 
 		}).sort((a: Node, b: Node) => {
-			return a.y > b.y ? -1 : 1;
+			return a.y > b.y ? -1 : 1; // TODO: I don't think this is going to work well, the lowest point isn't necessarily the first reached. Need to be using G or F really
 		});
 
 		return edgeNodes
@@ -59,8 +59,6 @@ export default class WaterFinder extends AStar
 
 					const x: number = arr[0];
 					const y: number = arr[1];
-
-					// TODO: This isn't going to work well, we need the entire grid, we need to include the traced route as well as all other cells visited with G equal to or lower than the final G (or F ?)
 
 					return {
 						x,

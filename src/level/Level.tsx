@@ -203,6 +203,9 @@ export default class Level {
 		for(const route of this.routes!)
 		{
 			const rows: Array< Array<JSX.Element> > = [];
+			const end: Point = route[ route.length - 1 ];
+
+			console.log(end);
 
 			for(let x = 0; x < size * 3; x++)
 			{
@@ -231,11 +234,8 @@ export default class Level {
 						classes.push("start");
 
 					// NB: Pretty crap in terms of performance but works
-					let node: PointWithCost | undefined;
-					if( node = route.find((point: PointWithCost) => point.x === x && point.y === y) )
-					{
+					if( route.find((point: Point) => point.x === x && point.y === y) )
 						classes.push("water");
-					}
 
 					rows[y].push ( <td key={x} className={classes.join(" ")}>{children}</td> );
 				}

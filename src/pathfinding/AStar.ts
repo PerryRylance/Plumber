@@ -59,6 +59,7 @@ export default class AStar {
 
 		while(!openList.empty())
 		{
+			// TODO: I think we need to sort this for waterFinder
 			node = openList.pop();
 			node.closed = true;
 
